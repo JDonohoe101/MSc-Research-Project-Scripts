@@ -7,7 +7,7 @@ import time
 #TODO: extract validation labels from each video and attribute them in the dictionary
 #TODO: Instead of exporting to folders, export as PROMPTS
 
-def process_videos(PATH: str) -> None:
+def process_videos(VIDEO_FOLDER_PATH: str, ANNOTATION_FILE_PATH: str) -> None:
     """
     This is the main function which extracts multimodal semantic features from
     videos in to prompts that can be fed in to both open and closed
@@ -19,16 +19,17 @@ def process_videos(PATH: str) -> None:
 
     #Counts number of videos in a folder to inform the progress bar total
     video_count=0 #counter variable
-    for video in os.scandir(PATH):
+    for video in os.scandir(VIDEO_FOLDER_PATH):
             if video.is_file() and os.path.splitext(video.name)[1].lower() in VALID_EXTENSIONS:
                 video_count += 1
 
     # -- Progress bar wrapper --
     with Progress() as progress:
         task = progress.add_task("[green]Processing videos...", total=video_count)
+        all_annotations_dict = utils.get_all_annotations(ANNOTATION_FILE_PATH)
 
         # -- Main loop --
-        for video in os.scandir(PATH):
+        for video in os.scandir(VIDEO_FOLDER_PATH):
             if video.is_file() and os.path.splitext(video.name)[1].lower() in VALID_EXTENSIONS:  # check if it's a (valid) video file
                 video_name = video.name
                 progress.console.log(f"Extracting data from {video_name}", style='bold magenta')
@@ -38,12 +39,15 @@ def process_videos(PATH: str) -> None:
                 video_audio_transcript = utils.get_audio_transcript(video_name)
                 print(video_audio_transcript)#debug statement, remove later
                 video_visual_description = utils.get_visual_description(video_name)
+                video_annotation = utils.get_annotation(video_name, all_annotations_dict)
+                print("ANNOTATION: ", video_annotation)
 
                 extracted_video_data = { #Dictionary used to hold all extracted data in a video
                     "video_name" : video_name,
                     "video_frames" : video_frames,
                     "video_audio_transcript" : video_audio_transcript,
-                    "video_visual_description" : video_visual_description
+                    "video_visual_description" : video_visual_description,
+                    "video_annotation" : video_annotation
                 }
 
                 total_extracted_video_data_list.append(extracted_video_data)
@@ -55,6 +59,8 @@ def process_videos(PATH: str) -> None:
 # -- Initial logic --
 if __name__ == "__main__":
     #Defines the path to the video folder and update the path in the utils module.
-    PATH = "/Users/jackdonohoe/MSC RESEARCH PROJECT/Datasets/HateMM - Data/7799469/func_test"
-    utils.current_path=PATH
-    process_videos(PATH)
+    VIDEO_FOLDER_PATH = "/Users/jackdonohoe/MSC RESEARCH PROJECT/Datasets/HateMM - Data/7799469/func_test"
+    ANNOTATION_FILE_PATH = "/Users/jackdonohoe/MSC RESEARCH PROJECT/Datasets/HateMM - Data/7799469/HateMM_annotation.csv"
+    utils.video_folder_path=VIDEO_FOLDER_PATH
+    utils.annotation_file_path=ANNOTATION_FILE_PATH
+    process_videos(VIDEO_FOLDER_PATH, ANNOTATION_FILE_PATH)
