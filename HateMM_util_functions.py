@@ -69,9 +69,47 @@ def get_annotation(video_name: str, annotations: dict) -> str|None:
     if record:
         return str(record.get('label'))
     return None
-#TODO
-def get_video_frames(video):
-    return 0
+
+def get_video_frames(video_name):
+    """
+    Creates a directory for the extracted frames, samples the frames
+    from the video provided, saves them in to the folder created.
+
+    Params: video_name
+    Name of the video we are processing.
+    """
+    # Load the video
+    path_to_video = os.path.join(video_folder_path, video_name)
+    cap = cv2.VideoCapture(path_to_video)
+    base_name = os.path.splitext(video_name)[0]  # removes extension
+    frame_folder = os.path.join(video_folder_path, f"{base_name}_frames")
+    os.makedirs(frame_folder, exist_ok=True)
+
+    # Check if video was opened successfully
+    if not cap.isOpened():
+        print("Error: Could not open video.")
+        exit()
+
+    frame_count = 0  # Initialize frame counter
+    SAMPLE_RATE = 24 # how many frames before sampling next
+    # Loop through each frame in the video
+    while True:
+        success, frame = cap.read()
+
+        # Break the loop if the video ends
+        if not success:
+            break
+
+        if frame_count % SAMPLE_RATE == 0:
+            # Save the frame as an image
+            frame_filename = os.path.join(frame_folder,f"{base_name}_frame_{frame_count:04d}.jpg")
+            cv2.imwrite(frame_filename, frame)
+            #print(f"Frame {frame_count} saved as {frame_filename}")#debug
+        
+        frame_count += 1
+
+    # Release the video capture object
+    cap.release()
 
 def get_audio_transcript(video_name: str) -> str|list:
     """
@@ -87,7 +125,7 @@ def get_audio_transcript(video_name: str) -> str|list:
     #Retrieves audio from video, then writes audio file to users system
     audio = convert_video_to_audio(video_name)
     audio_path = os.path.join(video_folder_path, os.path.splitext(video_name)[0])+"_audio.mp3"
-    audio.write_audiofile(audio_path)
+    audio.write_audiofile(audio_path, logger=None)
 
     #Load model and extract audio transcription given the audio files' path
     model = whisper.load_model("base")
