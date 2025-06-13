@@ -4,7 +4,6 @@ import HateMM_util_functions as utils
 from rich.progress import Progress, track
 import time
 
-#TODO: extract validation labels from each video and attribute them in the dictionary
 #TODO: Instead of exporting to folders, export as PROMPTS
 
 def process_videos(VIDEO_FOLDER_PATH: str, ANNOTATION_FILE_PATH: str) -> None:
@@ -12,6 +11,10 @@ def process_videos(VIDEO_FOLDER_PATH: str, ANNOTATION_FILE_PATH: str) -> None:
     This is the main function which extracts multimodal semantic features from
     videos in to prompts that can be fed in to both open and closed
     source LLMs.
+
+    Params:
+    VIDEO_FOLDER_PATH - Path to the video folder.
+    ANNOTATION_FILE_PATH - Path to the annotation csv file.
     """    
 
     total_extracted_video_data_list = [] #list to hold all videos extracted data
@@ -37,10 +40,11 @@ def process_videos(VIDEO_FOLDER_PATH: str, ANNOTATION_FILE_PATH: str) -> None:
                 # -- Calls to the extraction logic in util file --
                 video_frames = utils.get_video_frames(video_name)
                 video_audio_transcript = utils.get_audio_transcript(video_name)
-                print(video_audio_transcript)#debug statement, remove later
+                print(f"\nVIDEO: ", video_name)
+                print(f"AUDIO TRANSCRIPT: ",video_audio_transcript,'\n')#debug statement, remove later
                 video_visual_description = utils.get_visual_description(video_name)
                 video_annotation = utils.get_annotation(video_name, all_annotations_dict)
-                print("ANNOTATION: ", video_annotation)
+                print(f"ANNOTATION: ", video_annotation,'\n')
 
                 extracted_video_data = { #Dictionary used to hold all extracted data in a video
                     "video_name" : video_name,
