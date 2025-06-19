@@ -4,10 +4,19 @@ import cv2
 import os
 import pandas as pd
 import numpy as np
+from transformers import Blip2Processor, Blip2ForConditionalGeneration
+from PIL import Image
+import torch
 from moviepy import VideoFileClip, AudioFileClip
 
 video_folder_path=''#to be set by the main script
 annotation_file_path = ''#to be set by the main script
+
+# -- Image caption model initialisation --
+processor = Blip2Processor.from_pretrained("Salesforce/blip2-opt-2.7b", use_fast=True)
+model = Blip2ForConditionalGeneration.from_pretrained("Salesforce/blip2-opt-2.7b")
+device = "cuda" if torch.cuda.is_available() else "cpu"
+model.to(device)
 
 def convert_video_to_audio(video_name: str) -> AudioFileClip:
     """
@@ -70,7 +79,7 @@ def get_annotation(video_name: str, annotations: dict) -> str|None:
         return str(record.get('label'))
     return None
 
-def get_video_frames(video_name):
+def get_video_frames(video_name: str):
     """
     Creates a directory for the extracted frames, samples the frames
     from the video provided, saves them in to the folder created.
@@ -133,9 +142,25 @@ def get_audio_transcript(video_name: str) -> str|list:
     audio_transcript = result["text"]
     return audio_transcript
 
-#TODO
-def get_visual_description(video):
-    return 0
+#TODO put this in the other py file
+
+def generate_caption(processor: Blip2Processor, model: Blip2ForConditionalGeneration, image_path: str):
+    image = Image.open(image_path).convert("RGB")
+    inputs = processor(images=image, return_tensors="pt").to(device)
+    output = model.generate(**inputs)
+    caption = processor.decode(output[0], skip_special_tokens=True)
+    return caption
+    
+def output_captions(video_name: str):
+    output_captions = {}
+    frame_folder = os.path.join(video_folder_path, f"{os.path.splitext(video_name)[0]}_frames")
+
+    for filename in os.scandir(frame_folder):
+        frame_path = os.path.join(frame_folder, filename)
+        caption = generate_caption(processor, model, frame_path)
+        print(f"{filename.name} CAPTION: {caption}")
+        output_captions[filename] = caption
+    return output_captions
 
 #TODO
 def export_to_folder(data):
