@@ -42,7 +42,7 @@ def process_videos(VIDEO_FOLDER_PATH: str, ANNOTATION_FILE_PATH: str) -> None:
                 video_audio_transcript = utils.get_audio_transcript(video_name)
                 print(f"\nVIDEO: ", video_name)
                 print(f"AUDIO TRANSCRIPT: ",video_audio_transcript,'\n')#debug statement, remove later
-                video_visual_description = utils.get_visual_description(video_name)
+                video_visual_description = utils.output_captions(video_name)
                 video_annotation = utils.get_annotation(video_name, all_annotations_dict)
                 print(f"ANNOTATION: ", video_annotation,'\n')
 
